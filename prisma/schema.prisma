@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Roles {
+  APPLICANT
+  ADMIN
+  SUPERADMIN
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+}
+
+enum PaymentMethods {
+  BKASH
+  BANK
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  role  Roles  @default(APPLICANT)
+  users User[] @relation("UserRole")
+}
+
+model User {
+  id                     String                 @id @default(uuid())
+  phone                  String                 @unique
+  isPhoneVerified        Boolean                @default(false)
+  email                  String                 @unique
+  password               String
+  role                   Role                   @relation("UserRole", fields: [roleId], references: [id])
+  roleId                 Int
+  profile                Profile?               @relation("UserProfile")
+  phoneVerificationCodes PhoneVerificationCode?
+  emailVerificationCodes EmailVerificationCode?
+}
+
+model PhoneVerificationCode {
+  id         Int      @id @default(autoincrement())
+  code       String
+  date       DateTime @default(now())
+  isVerified Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @unique
+}
+
+model EmailVerificationCode {
+  id         Int      @id @default(autoincrement())
+  code       String
+  date       DateTime @default(now())
+  isVerified Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @unique
+}
+
+model Payment {
+  id     Int            @id @default(autoincrement())
+  status PaymentStatus  @default(UNPAID)
+  method PaymentMethods
+}
+
+model Profile {
+  id     Int    @id @default(autoincrement())
+  user   User   @relation("UserProfile", fields: [userId], references: [id])
+  userId String @unique // relation scalar field (used in the `@relation` attribute above)
+}
