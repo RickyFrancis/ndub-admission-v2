@@ -10,6 +10,273 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Role {
+  id    Int    @id @default(autoincrement())
+  role  Roles
+  users User[] @relation("UserRole")
+}
+
+model User {
+  id                     String                 @id @default(uuid())
+  name                   String
+  phone                  String                 @unique
+  email                  String                 @unique
+  password               String
+  date                   DateTime               @default(now())
+  role                   Role                   @relation("UserRole", fields: [roleId], references: [id])
+  roleId                 Int
+  profile                Profile?               @relation("UserProfile")
+  phoneVerificationCodes PhoneVerificationCode?
+  emailVerificationCodes EmailVerificationCode?
+  ssc                    SSC?
+  hsc                    HSC?
+  bachelor               Bachelor?
+  master                 Master[]
+  experience             Experience[]
+  images                 Images?
+  createdDepartments     Department[]           @relation("DepartmentCreatedBy")
+  updatedDepartments     Department[]           @relation("DepartmentUpdatedBy")
+  createdPrograms        Program[]              @relation("ProgramCreatedBy")
+  updatedPrograms        Program[]              @relation("ProgramUpdatedBy")
+  createdExams           Exam[]                 @relation("ExamCreatedBy")
+  updatedExams           Exam[]                 @relation("ExamUpdatedBy")
+  createdNotices         Notice[]               @relation("NoticeCreatedBy")
+  updatedNotices         Notice[]               @relation("NoticeUpdatedBy")
+  Registration           Registration[]
+}
+
+model PhoneVerificationCode {
+  id         Int      @id @default(autoincrement())
+  code       String
+  date       DateTime @default(now())
+  isVerified Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @unique
+}
+
+model EmailVerificationCode {
+  id         Int      @id @default(autoincrement())
+  code       String
+  date       DateTime @default(now())
+  isVerified Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @unique
+}
+
+model Profile {
+  id                        Int             @id @default(autoincrement())
+  date                      DateTime        @default(now())
+  user                      User            @relation("UserProfile", fields: [userId], references: [id])
+  userId                    String          @unique // relation scalar field (used in the `@relation` attribute above)
+  religion                  Religions
+  gender                    Genders
+  nationality               Nationalities   @default(Bangladeshi)
+  dob                       DateTime
+  bloodGroup                BloodGroups
+  maritalStatus             MaritalStatuses
+  birthCertificateNumber    String?
+  nidNumber                 String?
+  secondaryPhoneNumber      String?
+  fathersName               String
+  fathersOccupation         String?
+  fathersPhoneNumber        String
+  fathersNid                String?
+  mothersName               String
+  mothersOccupation         String?
+  mothersPhoneNumber        String
+  mothersNid                String?
+  localGuardiansName        String
+  localGuardiansOccupation  String?
+  localGuardiansPhoneNumber String
+  localGuardiansNid         String?
+  emergencyContactName      String
+  emergencyContactPhone     String
+  presentAddress            String
+  permanentAddress          String
+}
+
+model Images {
+  id               Int    @id @default(autoincrement())
+  user             User   @relation(fields: [userId], references: [id])
+  userId           String @unique
+  profilePicture   String
+  signaturePicture String
+}
+
+model SSC {
+  id          Int          @id @default(autoincrement())
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String       @unique
+  institution String
+  group       SSCHSCGroups
+  year        DateTime
+  gpa         Float
+  subjects    String[]
+}
+
+model HSC {
+  id          Int          @id @default(autoincrement())
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String       @unique
+  institution String
+  group       SSCHSCGroups
+  year        DateTime
+  gpa         Float
+  subjects    String[]
+}
+
+model Bachelor {
+  id              Int      @id @default(autoincrement())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String   @unique
+  course          String
+  institution     String
+  major           String?
+  degreeStartYear DateTime
+  degreeEndYear   DateTime
+  cgpa            Float
+}
+
+model Master {
+  id              Int      @id @default(autoincrement())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String   @unique
+  course          String
+  institution     String
+  major           String?
+  degreeStartYear DateTime
+  degreeEndYear   DateTime
+  cgpa            Float
+}
+
+model Experience {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  company   String
+  position  String
+  startYear DateTime
+  endYear   DateTime
+}
+
+model AdmissionTestMarks {
+  id               Int    @id @default(autoincrement())
+  // user             User   @relation(fields: [userId], references: [id])
+  // userId           String @unique
+  profilePicture   String
+  signaturePicture String
+}
+
+model Department {
+  id              Int       @id @default(autoincrement())
+  name            String
+  shortCode       String    @unique
+  details         String?
+  url             String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       User      @relation("DepartmentCreatedBy", fields: [createdByUserId], references: [id])
+  createdByUserId String    @unique
+  updatedBy       User      @relation("DepartmentUpdatedBy", fields: [updatedByUserId], references: [id])
+  updatedByUserId String    @unique
+  createdFrom     String?
+  updatedFrom     String?
+  Program         Program[]
+}
+
+model Program {
+  id              Int          @id @default(autoincrement())
+  name            String
+  shortCode       String       @unique
+  details         String?
+  url             String?
+  credit          Int
+  type            ProgramTypes
+  department      Department   @relation(fields: [departmentId], references: [id])
+  departmentId    Int
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       User         @relation("ProgramCreatedBy", fields: [createdByUserId], references: [id])
+  createdByUserId String       @unique
+  updatedBy       User         @relation("ProgramUpdatedBy", fields: [updatedByUserId], references: [id])
+  updatedByUserId String       @unique
+  createdFrom     String?
+  updatedFrom     String?
+  Exam            Exam[]
+}
+
+model Exam {
+  id              Int            @id @default(autoincrement())
+  title           String
+  description     String?
+  batch           Int
+  trimester       Trimesters
+  year            String
+  examDate        DateTime
+  conducted       Boolean
+  program         Program        @relation(fields: [programId], references: [id])
+  programId       Int
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  createdBy       User           @relation("ExamCreatedBy", fields: [createdByUserId], references: [id])
+  createdByUserId String         @unique
+  updatedBy       User?          @relation("ExamUpdatedBy", fields: [updatedByUserId], references: [id])
+  updatedByUserId String?        @unique
+  createdFrom     String?
+  updatedFrom     String?
+  Registration    Registration[]
+}
+
+model Registration {
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  exam        Exam     @relation(fields: [examId], references: [id])
+  examId      Int
+  applicantId String
+  Payment     Payment?
+  date        DateTime @default(now())
+  Result      Result?
+}
+
+model Result {
+  id             Int          @id @default(autoincrement())
+  written        Int
+  viva           Int
+  total          Int?
+  position       Int?
+  remarks        String?
+  registration   Registration @relation(fields: [registrationId], references: [id])
+  registrationId Int          @unique
+  date           DateTime     @default(now())
+}
+
+model Payment {
+  id             Int            @id @default(autoincrement())
+  status         PaymentStatus  @default(UNPAID)
+  method         PaymentMethods
+  details        Json?
+  registration   Registration   @relation(fields: [registrationId], references: [id])
+  registrationId Int            @unique
+  date           DateTime       @default(now())
+}
+
+model Notice {
+  id              Int      @id @default(autoincrement())
+  title           String
+  body            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdBy       User     @relation("NoticeCreatedBy", fields: [createdByUserId], references: [id])
+  createdByUserId String   @unique
+  updatedBy       User?    @relation("NoticeUpdatedBy", fields: [updatedByUserId], references: [id])
+  updatedByUserId String?  @unique
+  createdFrom     String?
+  updatedFrom     String?
+}
+
+// Enums
+
 enum Roles {
   APPLICANT
   ADMIN
@@ -41,143 +308,15 @@ enum Religions {
   Other
 }
 
-model Role {
-  id    Int    @id @default(autoincrement())
-  role  Roles  @default(APPLICANT)
-  users User[] @relation("UserRole")
+enum Trimesters {
+  SPRING
+  SUMMER
+  FALL
 }
 
-model User {
-  id                     String                 @id @default(uuid())
-  phone                  String                 @unique
-  isPhoneVerified        Boolean                @default(false)
-  email                  String                 @unique
-  password               String
-  role                   Role                   @relation("UserRole", fields: [roleId], references: [id])
-  roleId                 Int
-  profile                Profile?               @relation("UserProfile")
-  phoneVerificationCodes PhoneVerificationCode?
-  emailVerificationCodes EmailVerificationCode?
-  date                   DateTime               @default(now())
-}
-
-model PhoneVerificationCode {
-  id         Int      @id @default(autoincrement())
-  code       String
-  date       DateTime @default(now())
-  isVerified Boolean  @default(false)
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String   @unique
-}
-
-model EmailVerificationCode {
-  id         Int      @id @default(autoincrement())
-  code       String
-  date       DateTime @default(now())
-  isVerified Boolean  @default(false)
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String   @unique
-}
-
-model Payment {
-  id      Int            @id @default(autoincrement())
-  status  PaymentStatus  @default(UNPAID)
-  method  PaymentMethods
-  details Json?
-  date    DateTime       @default(now())
-}
-
-model Profile {
-  id                        Int             @id @default(autoincrement())
-  date                      DateTime        @default(now())
-  user                      User            @relation("UserProfile", fields: [userId], references: [id])
-  userId                    String          @unique // relation scalar field (used in the `@relation` attribute above)
-  religion                  Religions
-  gender                    Genders
-  nationality               Nationalities   @default(Bangladeshi)
-  dob                       DateTime
-  bloodgroup                BloodGroups
-  maritalStatus             MaritalStatuses
-  birthCertificateNumber    String?
-  nidNumber                 String?
-  secondaryPhoneNumber      String?
-  fathersName               String
-  fathersOccupation         String?
-  fathersPhoneNumber        String
-  fathersNid                String?
-  mothersName               String
-  mothersOccupation         String?
-  mothersPhoneNumber        String
-  mothersNid                String?
-  localGuardiansName        String
-  localGuardiansOccupation  String?
-  localGuardiansPhoneNumber String
-  localGuardiansNid         String?
-  emergencyContactName      String
-  emergencyContactPhone     String
-  presentAddress            String
-  permamentAddress          String
-  ssc                       SSC?
-  hsc                       HSC?
-  bachelor                  Bachelor?
-  master                    Master[]
-  experience                Experience[]
-}
-
-model SSC {
-  id          Int          @id @default(autoincrement())
-  profile     Profile      @relation(fields: [profileId], references: [id])
-  profileId   Int          @unique
-  institution String
-  group       SSCHSCGroups
-  year        DateTime
-  gpa         Float
-  subjects    String[]
-}
-
-model HSC {
-  id          Int          @id @default(autoincrement())
-  profile     Profile      @relation(fields: [profileId], references: [id])
-  profileId   Int          @unique
-  institution String
-  group       SSCHSCGroups
-  year        DateTime
-  gpa         Float
-  subjects    String[]
-}
-
-model Bachelor {
-  id              Int      @id @default(autoincrement())
-  profile         Profile  @relation(fields: [profileId], references: [id])
-  profileId       Int      @unique
-  course          String
-  institution     String
-  major           String?
-  degreeStartYear DateTime
-  degreeEndYear   DateTime
-  cgpa            Float
-}
-
-model Master {
-  id              Int      @id @default(autoincrement())
-  profile         Profile  @relation(fields: [profileId], references: [id])
-  profileId       Int
-  course          String
-  institution     String
-  major           String?
-  degreeStartYear DateTime
-  degreeEndYear   DateTime
-  cgpa            Float
-}
-
-model Experience {
-  id        Int      @id @default(autoincrement())
-  profile   Profile  @relation(fields: [profileId], references: [id])
-  profileId Int
-  company   String
-  position  String
-  startYear DateTime
-  endYear   DateTime
+enum ProgramTypes {
+  UNDERGRADUATE
+  GRADUATE
 }
 
 enum MaritalStatuses {
